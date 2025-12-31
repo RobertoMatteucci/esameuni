@@ -1,0 +1,89 @@
+================================================================================
+                            FIX-IT FELIX JR. - GAME DESIGN DOCUMENTATION
+================================================================================
+
+1. GAME OVERVIEW
+----------------
+A recreation of the classic arcade game "Fix-It Felix Jr.". The player controls 
+Felix, who must repair windows broken by Ralph while avoiding falling bricks and 
+flying ducks. The game features infinite level progression with increasing difficulty.
+
+2. CORE GAME LOOP
+----------------
+The game runs at 30 FPS, managed by the 'GamePanel' thread.
+1. UPDATE: Logic for Player, Ralph, Ducks, and Physics is calculated.
+2. RENDER: The current state is drawn to the screen.
+3. REPEAT.
+
+3. LEVEL PROGRESSION SYSTEM
+---------------------------
+The game uses a specific logic for advancing levels to mimic the arcade feel.
+
+[ A. The Objective ]
+- Each level has a set number of broken windows (Standard: 20).
+- Felix must repair them using the Space Bar.
+- When the LAST window is fixed:
+  1. Input is locked.
+  2. 'TileManager' triggers the "Destruction Cutscene".
+  3. Ralph climbs up/smashes the building for 2 seconds.
+  4. 'GamePanel' waits for this animation to finish.
+
+[ B. The Transition ]
+- Once destruction ends:
+  1. The screen scrolls downwards (Felix moves up relative to the building).
+  2. The map is rebuilt ('LivelloCompletato' generates new windows).
+  3. A 1-second safety cooldown activates (prevents instant-winning the new level).
+
+[ C. Odd vs. Even Levels ]
+- ODD Levels (1, 3, 5...): 
+  - The game continues immediately after the scroll.
+  - Ralph stays at the top.
+- EVEN Levels (2, 4, 6...): 
+  - Triggers the "YOU FIXED IT" cutscene.
+  - Transitions to the "Victory" sequence (Citizens carry Ralph away).
+  - This signifies completing a full "building section".
+
+4. DIFFICULTY SCALING
+---------------------
+As the level number increases, the game becomes harder automatically.
+
+[ Ralph ]
+- Movement Speed: Increases every few levels (Max 3x speed).
+- Brick Frequency: Delays between throws decrease.
+- Brick Speed: Bricks fall faster.
+
+[ Ducks ]
+- Appear starting at Level 5.
+- Quantity increases (1 -> 2 -> 3 -> Max 4 simultaneous ducks).
+- Speed increases from fixed (Level 5) to variable/fast (Level 15+).
+
+[ Time Limit ]
+- Time allowed decreases as levels get higher (120s -> 90s -> 70s).
+
+5. CONTROLS
+-----------
+- ARROW KEYS: Move Felix (Left/Right/Up/Down).
+- SPACE BAR:  Fix Window / Jump (context sensitive).
+- ENTER:      Confirm in Menu / High Score screen.
+- ESC:        Quit Game.
+
+6. TECHNICAL ARCHITECTURE (REFACTORED)
+--------------------------------------
+The code is organized into the 'com.game' package.
+
+[ Core Managers ]
+- GamePanel.java: The brain. Controls the loop, render order, and level state.
+- TileManager.java: Controls the map, windows, and the "Destruction" cutscene.
+- CutsceneManager.java: Controls narrative scenes (Intro, Victory, Story).
+- ResourceManager.java: (Singleton) Caches images/fonts to prevent lag.
+- SoundEffects.java: (Static) Manages audio loading and playback.
+
+[ Entities ]
+- Player.java: Handles Felix's physics, animations, and death states.
+- Ralph.java: Handles AI movement and brick throwing logic.
+- Duck.java: Handles flying enemies and RNG spawning.
+- Pie.java: Handles the bonus power-up item logic.
+
+[ Data ]
+- HighScoreManager.java: Saves/Loads top 6 scores to 'highscores.dat'.
+- LivelloN.java: simple data holder for current level number.
